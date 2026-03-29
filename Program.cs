@@ -24,6 +24,12 @@ internal class Program
             {
                 Console.Clear();
                 File_Editor.RenameFiles(MasterFolderPath);
+                Console.WriteLine("Seguir con los archivos duplicados");
+                Console.ReadLine();
+                Console.Clear();
+                Console.WriteLine("Archivos del mismo peso");
+                File_Editor.DetectDuplicateFiles(MasterFolderPath);
+                Console.ReadLine();
                 break;
             }
         }

@@ -16,7 +16,7 @@
             foreach (Folder_Group FolderGroup in Folder_Groups)
             {
                 Console.Clear();
-                    
+
                 int ProcessedCorrectly = 0;
                 int TotalFiles = FolderGroup.File_Paths.Count;
 
@@ -28,7 +28,18 @@
 
                     string DirectoryName = Path.GetFileName(Directory);
 
-                    string NewFilePath = Path.Combine(Directory, $"{DirectoryName}_{i + 1:D3}" + FileExtension);
+                    HashSet<int> UsedNumbers = GetUsedNumbers(Directory, DirectoryName);
+
+                    int NextNumber = 1;
+                    while (UsedNumbers.Contains(NextNumber))
+                    {
+                        NextNumber++;
+                    }
+
+                    string NewFilePath = Path.Combine(Directory, $"{DirectoryName}_{NextNumber:D3}" + FileExtension);
+
+                    // Marcar como usado
+                    UsedNumbers.Add(NextNumber);
 
                     try
                     {
@@ -83,12 +94,83 @@
 
             return Folder_Groups;
         }
-        private static void ConsoleWait ()
+        private static void ConsoleWait()
         {
             Console.ReadLine();
             Console.Clear();
         }
+
+        private static HashSet<int> GetUsedNumbers(string DirectoryPath, string DirectoryName)
+        {
+            HashSet<int> Numbers = new();
+
+            var Files = Directory.GetFiles(DirectoryPath);
+
+            foreach (var File in Files)
+            {
+                string Name = Path.GetFileNameWithoutExtension(File);
+
+                if (Name.StartsWith(DirectoryName + "_"))
+                {
+                    string NumberPart = Name.Replace(DirectoryName + "_", "");
+
+                    if (int.TryParse(NumberPart, out int Num))
+                    {
+                        Numbers.Add(Num);
+                    }
+                }
+            }
+
+            return Numbers;
+        }
+
+        public static void DetectDuplicateFiles(string MasterFolder)
+        {
+            Console.WriteLine("\nBuscando archivos duplicados por tamaño...\n");
+
+            Dictionary<long, List<string>> FilesBySize = new();
+
+            var AllFiles = Directory.GetFiles(MasterFolder, "*", SearchOption.AllDirectories);
+
+            foreach (var FilePath in AllFiles)
+            {
+                long Size = new FileInfo(FilePath).Length;
+
+                if (!FilesBySize.ContainsKey(Size))
+                {
+                    FilesBySize[Size] = new List<string>();
+                }
+
+                FilesBySize[Size].Add(FilePath);
+            }
+
+            bool FoundDuplicates = false;
+
+            foreach (var Group in FilesBySize)
+            {
+                if (Group.Value.Count > 1)
+                {
+                    FoundDuplicates = true;
+
+                    Console.WriteLine($"Archivos con tamaño {Group.Key} bytes:");
+
+                    foreach (var File in Group.Value)
+                    {
+                        Console.WriteLine(File);
+                    }
+
+                    Console.WriteLine();
+                }
+            }
+
+            if (!FoundDuplicates)
+            {
+                Console.WriteLine("No se encontraron archivos duplicados por tamaño.");
+            }
+        }
+
     }
+
 
     public record Folder_Group
     {
